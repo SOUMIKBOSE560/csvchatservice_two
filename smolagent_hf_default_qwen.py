@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 
 # Load environment variables
 load_dotenv()
-hf_tokens = os.getenv("HF_TOKENS").split(",")
+hf_tokens = os.getenv("HUGGINGFACE_API_TOKENS").split(",")
 image_file_path = os.getenv("IMAGE_FILE_PATH")
 
 # Set the first HF token globally
