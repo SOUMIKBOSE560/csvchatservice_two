@@ -55,7 +55,7 @@ async def if_chart(query: InputRequest, authorization: str = Header(None)):
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
-    # Validate token
+    # Validate token first
     if token != os.getenv("AUTH_TOKEN"):
         raise HTTPException(status_code=403, detail="Invalid token")
     
