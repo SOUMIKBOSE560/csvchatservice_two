@@ -41,7 +41,7 @@ class InputRequest(BaseModel):
 
 @app.post("/api/if_chart")
 async def if_chart(query: InputRequest, authorization: str = Header(None)):
-    # Check if Authorization header is provided
+    # Check if Authorization header is provided or not
     
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
