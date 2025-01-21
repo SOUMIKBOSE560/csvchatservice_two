@@ -50,7 +50,7 @@ async def if_chart(query: InputRequest, authorization: str = Header(None)):
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header format")
 
-    # Extract token from Authorization header
+    # Extract token from the Authorization header
     token = authorization.split(" ")[1]
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
