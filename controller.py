@@ -21,7 +21,6 @@ image_not_found = os.getenv("IMAGE_NOT_FOUND")
 allowed_hosts = os.getenv("ALLOWED_HOSTS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
-    #allow_origins=allowed_hosts,  # Allows all origins
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"], 
