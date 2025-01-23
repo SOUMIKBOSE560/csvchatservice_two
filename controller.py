@@ -60,7 +60,7 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
         
         # initial query handler
         if(if_initial_chart_question(query)):
-             answer = gemini_agent(decoded_url,f"{query} && Create Maximum of 2 charts and Please try to provide these 2 charts in a single image, save the image and return the image_path")
+             answer = qwen_agent(decoded_url,f"{query} && Create Maximum of 2 charts and Please try to provide these 2 charts in a single image, save the image and return the image_path")
              if "temp_chart" in answer:
                  return FileResponse(image_file_path, media_type="image/png")
              else:
@@ -78,7 +78,7 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
                 return FileResponse(image_file_path, media_type="image/png")
             else:
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": fallbackResp.get("python_code")}
+                return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
     
     except Exception as e:
        return {"answer":"error"}
@@ -119,16 +119,16 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
         # initial query handler
         if(if_initial_chat_question(query)):
             try:
-             answer = gemini_agent(decoded_url,f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
+             answer = qwen_agent(decoded_url,f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
              try:
               json_resp = jsonable_encoder(answer)
               return {"answer": json_resp}
              except Exception as e:
               fallbackResp = await fallback_chat(query, csv_url)
-              return {"answer": fallbackResp.get("python_code")}
+              return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
             except Exception as e:
              fallbackResp = await fallback_chat(query, csv_url)
-             return {"answer": fallbackResp.get("python_code")}
+             return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
          
         try:
              answer = qwen_agent(decoded_url,query)
@@ -140,7 +140,7 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
              except Exception as e:
               print(f"Error gemini agent: {e}")
               fallbackResp = await fallback_chat(query, csv_url)
-              return {"answer": fallbackResp.get("python_code")}
+              return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
                  
         # print(f"Final answer: {answer}")
         
@@ -150,7 +150,7 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
         except Exception as e:
          print(f"Error in jsonable_encoder: {e}")
          fallbackResp = await fallback_chat(query, csv_url)
-         return {"answer": fallbackResp.get("python_code")}
+         return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
                
     except Exception as e:
         print(f"Error: {e}")
