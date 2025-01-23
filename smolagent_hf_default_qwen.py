@@ -1,8 +1,10 @@
 import os
 import time
 from dotenv import load_dotenv
+from matplotlib import pyplot as plt
 from smolagents import CodeAgent, DuckDuckGoSearchTool, HfApiModel
 import matplotlib
+
 
 matplotlib.use("Agg")
 
@@ -14,6 +16,23 @@ image_file_path = os.getenv("IMAGE_FILE_PATH")
 # Set the first HF token globally
 os.environ["HF_TOKEN"] = hf_tokens[0]
 print(f"Initial HF_TOKEN set to the first token.")
+
+def save_plot_instead_of_show():
+    """
+    Custom function to save the plot instead of displaying it.
+    """
+    import os
+    import time
+
+    # Generate a unique filename (e.g., using a timestamp)
+    filename = image_file_path
+    
+    # Save the plot to the current working directory
+    plt.savefig(filename)
+    print(f"Plot saved as {filename}")
+
+# Replace plt.show with the custom function
+plt.show = save_plot_instead_of_show
 
 def initialize_agent():
     """Reinitialize the agent to pick up the latest HF_TOKEN."""

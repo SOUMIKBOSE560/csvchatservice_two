@@ -1,8 +1,7 @@
 # smolagent gemini flash
-
-
 import os
 from dotenv import load_dotenv
+from matplotlib import pyplot as plt
 from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel
 import matplotlib
 matplotlib.use("Agg")
@@ -11,6 +10,26 @@ load_dotenv()
 
 image_file_path = os.getenv("IMAGE_FILE_PATH")
 google_api_keys = os.getenv("GOOGLE_API_KEYS").split(",")
+
+# Monkey patch plt.show to save the plot instead of displaying it
+def save_plot_instead_of_show():
+    """
+    Custom function to save the plot instead of displaying it.
+    """
+    import os
+    import time
+
+    # Generate a unique filename (e.g., using a timestamp)
+    filename = image_file_path
+    
+    # Save the plot to the current working directory
+    plt.savefig(filename)
+    print(f"Plot saved as {filename}")
+
+# Replace plt.show with the custom function
+plt.show = save_plot_instead_of_show
+
+
 
 key_index = 0
 current_key = google_api_keys[key_index]
