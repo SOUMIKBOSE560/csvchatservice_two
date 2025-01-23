@@ -43,7 +43,7 @@ model = get_model(current_key)
 csv_agent = CodeAgent(
     tools=[DuckDuckGoSearchTool()],
     model=model,
-    additional_authorized_imports=["pandas", "numpy", "matplotlib", "seaborn"]
+    additional_authorized_imports=["pandas", "numpy", "io", "os", "matplotlib", "seaborn"]
 )
 
 system_prompt = f"""

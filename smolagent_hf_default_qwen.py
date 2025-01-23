@@ -37,7 +37,7 @@ def initialize_agent():
     return CodeAgent(
         tools=[DuckDuckGoSearchTool()],
         model=HfApiModel(),
-        additional_authorized_imports=["pandas", "numpy", "io", "matplotlib", "seaborn"]
+        additional_authorized_imports=["pandas", "numpy", "io", "os", "matplotlib", "seaborn"]
     )
 
 # Initialize agent
