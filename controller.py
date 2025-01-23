@@ -119,7 +119,7 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
         # initial query handler
         if(if_initial_chat_question(query)):
             try:
-             answer = qwen_agent(decoded_url,f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
+             answer = gemini_agent(decoded_url,f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
              try:
               json_resp = jsonable_encoder(answer)
               return {"answer": json_resp}
