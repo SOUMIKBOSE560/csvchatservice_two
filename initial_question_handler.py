@@ -1,11 +1,11 @@
 INITIAL_CHAT_QUESTIONS = [
     "What insights can I get from this data?",
-    "Can you summarize the dataset?",
-    "What are the key trends in the data?"
+    "Can you summarize the dataset?"
 ]
 
 INITIAL_CHART_QUESTIONS = [
     "Can you provide a visualization of the data?",
+     "What are the key trends in the data?"
 ]
 
 def if_initial_chat_question(query: str) -> bool:
