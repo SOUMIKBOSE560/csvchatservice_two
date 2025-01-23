@@ -21,8 +21,6 @@ def save_plot_instead_of_show():
     """
     Custom function to save the plot instead of displaying it.
     """
-    import os
-    import time
 
     # Generate a unique filename (e.g., using a timestamp)
     filename = image_file_path
