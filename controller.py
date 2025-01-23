@@ -60,7 +60,7 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
         
         # initial query handler
         if(if_initial_chart_question(query)):
-             answer = gemini_agent(decoded_url,f"{query} && Create Maximum of 2 charts and Please try to provide these 2 charts in a single image, save the image and return the image_path")
+             answer = gemini_agent(decoded_url,f"{query} && Create Maximum of 2 charts and Please try to provide these 2 charts in a single image, save the image in {image_file_path}")
              if "temp_chart" in answer:
                  return FileResponse(image_file_path, media_type="image/png")
              else:
