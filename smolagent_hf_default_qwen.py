@@ -36,6 +36,7 @@ For handling queries, follow these guidelines:
 2. **Queries Requiring Visualization**:
    - Use the libraries: pandas, numpy, matplotlib or seaborn (for visualization).
    - Please ensure that each value is clearly visible. Adjust the font size, rotate labels, or truncate labels for readability if needed.
+   - Do not use plt.show() in the code snippet to display the plot.
    - Save any generated visualizations as `{image_file_path}`.
 """
 
