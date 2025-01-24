@@ -32,7 +32,26 @@ async def root():
     return {"message": "Pong !!"}
 
 
+@app.post("/api/get-chart")
+async def get_image(request: dict, authorization: str = Header(None)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
 
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid authorization header format")
+
+    token = authorization.split(" ")[1]
+    if not token:
+        raise HTTPException(status_code=401, detail="Token missing")
+    if token != os.getenv("AUTH_TOKEN"):
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    try:
+        return FileResponse(image_file_path, media_type="image/png")
+    except Exception as e:
+        print(f"Error: {e}")
+        return {"answer": "error"}
+        
 
    
 @app.post("/api/csv-chart/")
