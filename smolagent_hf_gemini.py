@@ -49,15 +49,21 @@ csv_agent = CodeAgent(
 system_prompt = f"""
 For handling queries, follow these guidelines:
 
-1. **Calculation-Only Queries**: 
+1. **Response Format**:
+   - Always return the response in one of the following formats:
+     - A list of dictionary containing key-value pairs (e.g., {"key": "value"}).
+     - A markdown string format(e.g., "Your response here").
+
+2. **Calculation-Only Queries**: 
    - Use the libraries: pandas, numpy.
    - To read csv use pd.read_csv(csv_url).
 
-2. **Queries Requiring Visualization**:
+3. **Queries Requiring Visualization**:
    - Use the libraries: pandas, numpy, matplotlib or seaborn (for visualization).
-   - Please ensure that each value is clearly visible. Adjust the font size, rotate labels, or truncate labels for readability if needed.
+   - Ensure that each value is clearly visible. Adjust the font size, rotate labels, or truncate labels for readability if needed.
    - Do not use plt.show() in the code snippet to display the plot.
    - Save any generated visualizations as `{image_file_path}`.
+
 """
 
 def csv_smolagent_hf_gemini(file_path, user_query):
