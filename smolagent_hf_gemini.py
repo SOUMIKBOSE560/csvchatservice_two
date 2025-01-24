@@ -51,8 +51,8 @@ For handling queries, follow these guidelines:
 
 1. **Response Format**:
    - Always return the response in one of the following formats:
-     - A list of dictionary containing key-value pairs (e.g., {"key": "value"}).
-     - A markdown string format(e.g., "Your response here").
+     - A list.
+     - A markdown string formatted response(e.g., "Your response here").
 
 2. **Calculation-Only Queries**: 
    - Use the libraries: pandas, numpy.
