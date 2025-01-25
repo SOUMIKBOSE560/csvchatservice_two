@@ -5,86 +5,110 @@ from typing import Any
 from datetime import datetime, date, time, timedelta
 
 
-
-
-
-from fastapi.encoders import jsonable_encoder
-import numpy as np
-import pandas as pd
-from typing import Any
-from datetime import datetime, date, time, timedelta
-
 def safe_jsonable_encoder(obj: Any) -> Any:
     """
-    A custom JSON encoder that handles all NumPy types, Pandas DataFrames, and other non-standard types.
+    Handles all NumPy/Pandas types, custom objects, and edge cases without errors.
     """
+    # Handle None and basic types first
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+
+    # ----------------------------------
     # Handle NumPy types
-    if isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8, np.uint64, np.uint32, np.uint16, np.uint8)):
+    # ----------------------------------
+    # Numpy scalars
+    if isinstance(obj, np.integer):
         return int(obj)
-    elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
+    if isinstance(obj, np.floating):
         return float(obj)
-    elif isinstance(obj, (np.bool_)):
+    if isinstance(obj, np.bool_):
         return bool(obj)
-    elif isinstance(obj, (np.datetime64, np.timedelta64)):
-        return str(obj)  # Convert datetime64 and timedelta64 to string
-    elif isinstance(obj, (np.ndarray)):
-        return obj.tolist()  # Convert NumPy arrays to lists
-    elif isinstance(obj, (np.void)):  # Handle structured arrays
+    if isinstance(obj, np.datetime64):
+        return pd.Timestamp(obj).isoformat()
+    if isinstance(obj, np.timedelta64):
+        return str(obj)
+    
+    # Numpy arrays
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    
+    # Numpy dtypes (e.g., np.dtype('int64'))
+    if isinstance(obj, np.dtype):
+        return str(obj)
+    
+    # Numpy void (structured arrays)
+    if isinstance(obj, np.void):
         if hasattr(obj.dtype, 'names') and obj.dtype.names:
             return {key: safe_jsonable_encoder(obj[key]) for key in obj.dtype.names}
-        else:
-            return str(obj)  # Fallback for unstructured void
-    elif isinstance(obj, (np.generic)):  # Handle generic NumPy types
-        return obj.item()  # Convert to Python scalar
+        return None
+    
+    # Generic numpy types (fallback)
+    if isinstance(obj, np.generic):
+        return obj.item()
 
+    # ----------------------------------
     # Handle Pandas types
-    elif isinstance(obj, (pd.DataFrame)):
-        return obj.to_dict(orient="records")  # Convert DataFrame to list of dictionaries
-    elif isinstance(obj, (pd.Series)):
-        return obj.tolist()  # Convert Series to list
-    elif isinstance(obj, (pd.Index)):
-        return obj.tolist()  # Convert Index to list
-    elif isinstance(obj, (pd.Timestamp)):
-        return obj.isoformat()  # Convert Timestamp to ISO format string
-    elif isinstance(obj, (pd.Timedelta)):
-        return str(obj)  # Convert Timedelta to string
-
-    # Handle Python datetime types
-    elif isinstance(obj, (datetime, date, time, timedelta)):
-        return obj.isoformat()  # Convert datetime objects to ISO format string
-
-    # Handle objects with __dict__ attribute
-    elif hasattr(obj, "__dict__"):
-        return {key: safe_jsonable_encoder(value) for key, value in vars(obj).items()}
-
-    # Handle iterables (lists, tuples, sets)
-    elif isinstance(obj, (list, tuple)):
-        return [safe_jsonable_encoder(item) for item in obj]
-    elif isinstance(obj, (set)):
-        return [safe_jsonable_encoder(item) for item in obj]  # Convert set to list
-
-    # Handle dictionaries
-    elif isinstance(obj, dict):
-        return {key: safe_jsonable_encoder(value) for key, value in obj.items()}
-
-    # Handle bytes and bytearray
-    elif isinstance(obj, (bytes, bytearray)):
-        return obj.decode("utf-8", errors="ignore")  # Convert bytes to string
-
-    # Handle pd.NA and np.nan
-    elif pd.isna(obj) or (isinstance(obj, (np.ndarray)) and np.isnan(obj).all()):
+    # ----------------------------------
+    # Pandas DataFrame/Series/Index
+    if isinstance(obj, pd.DataFrame):
+        return obj.replace({np.nan: None}).to_dict(orient="records")
+    if isinstance(obj, (pd.Series, pd.Index)):
+        return obj.replace({np.nan: None}).tolist()
+    
+    # Pandas Timestamp/Timedelta
+    if isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    if isinstance(obj, pd.Timedelta):
+        return str(obj)
+    
+    # Pandas nullable types (e.g., Int64Dtype, pd.NA)
+    if isinstance(obj, pd.api.extensions.ExtensionArray):
+        return obj.astype(object).tolist()
+    if pd.isna(obj):  # Handles pd.NA, np.nan, etc.
         return None
 
-    # Fallback to FastAPI's jsonable_encoder
-    else:
+    # ----------------------------------
+    # Handle Python types
+    # ----------------------------------
+    # Datetime objects
+    if isinstance(obj, (datetime, date, time)):
+        return obj.isoformat()
+    if isinstance(obj, timedelta):
+        return str(obj)
+    
+    # Bytes/bytearray
+    if isinstance(obj, (bytes, bytearray)):
+        return obj.decode("utf-8", errors="ignore")
+    
+    # Iterables (lists, tuples, sets)
+    if isinstance(obj, (list, tuple, set)):
+        return [safe_jsonable_encoder(item) for item in obj]
+    
+    # Dictionaries
+    if isinstance(obj, dict):
+        return {k: safe_jsonable_encoder(v) for k, v in obj.items()}
+
+    # ----------------------------------
+    # Handle custom objects
+    # ----------------------------------
+    # Objects with __dict__ (but skip modules/classes)
+    if hasattr(obj, "__dict__") and not isinstance(obj, type):
         try:
-            return jsonable_encoder(obj)
-        except TypeError as e:
-            print(f"Failed to serialize object of type {type(obj)}: {e}")
-            return str(obj)  # If all else fails, convert to string
-        
-        
-        
+            return {k: safe_jsonable_encoder(v) for k, v in vars(obj).items()}
+        except TypeError:
+            pass  # Fall through to other checks
+    
+    # ----------------------------------
+    # Final fallbacks
+    # ----------------------------------
+    try:
+        # FastAPI's default encoder
+        return jsonable_encoder(obj)
+    except TypeError:
+        # Convert to string as last resort
+        return str(obj)
         
         
         
