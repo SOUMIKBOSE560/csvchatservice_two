@@ -50,9 +50,8 @@ system_prompt = f"""
 For handling queries, follow these guidelines:
 
 1. **Response Format**:
-   - Always return the response in one of the following formats:
-     - A list.
-     - A markdown string formatted response(e.g., "Your response here").
+   - Always return the response in following format:
+     - A list of dict.
 
 2. **Calculation-Only Queries**: 
    - Use the libraries: pandas, numpy.
