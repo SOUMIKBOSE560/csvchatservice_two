@@ -1,5 +1,92 @@
 import numpy as np
 import pandas as pd
+from fastapi.encoders import jsonable_encoder
+from typing import Any
+from datetime import datetime, date, time, timedelta
+
+
+
+
+
+
+def safe_jsonable_encoder(obj: Any) -> Any:
+    """
+    A custom JSON encoder that handles all NumPy types, Pandas DataFrames, and other non-standard types.
+    """
+    # Handle NumPy types
+    if isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8, np.uint64, np.uint32, np.uint16, np.uint8)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_)):
+        return bool(obj)
+    elif isinstance(obj, (np.datetime64, np.timedelta64)):
+        return str(obj)  # Convert datetime64 and timedelta64 to string
+    elif isinstance(obj, (np.ndarray)):
+        return obj.tolist()  # Convert NumPy arrays to lists
+    elif isinstance(obj, (np.void)):  # Handle structured arrays
+        if hasattr(obj.dtype, 'names') and obj.dtype.names:
+            return {key: safe_jsonable_encoder(obj[key]) for key in obj.dtype.names}
+        else:
+            return str(obj)  # Fallback for unstructured void
+    elif isinstance(obj, (np.generic)):  # Handle generic NumPy types
+        return obj.item()  # Convert to Python scalar
+
+    # Handle Pandas types
+    elif isinstance(obj, (pd.DataFrame)):
+        return obj.to_dict(orient="records")  # Convert DataFrame to list of dictionaries
+    elif isinstance(obj, (pd.Series)):
+        return obj.tolist()  # Convert Series to list
+    elif isinstance(obj, (pd.Index)):
+        return obj.tolist()  # Convert Index to list
+    elif isinstance(obj, (pd.Timestamp)):
+        return obj.isoformat()  # Convert Timestamp to ISO format string
+    elif isinstance(obj, (pd.Timedelta)):
+        return str(obj)  # Convert Timedelta to string
+    elif pd.isna(obj):  # Handle pd.NA and np.nan
+        return None
+
+    # Handle Python datetime types
+    elif isinstance(obj, (datetime, date, time, timedelta)):
+        return obj.isoformat()  # Convert datetime objects to ISO format string
+
+    # Handle objects with __dict__ attribute
+    elif hasattr(obj, "__dict__"):
+        return {key: safe_jsonable_encoder(value) for key, value in vars(obj).items()}
+
+    # Handle iterables (lists, tuples, sets)
+    elif isinstance(obj, (list, tuple)):
+        return [safe_jsonable_encoder(item) for item in obj]
+    elif isinstance(obj, (set)):
+        return [safe_jsonable_encoder(item) for item in obj]  # Convert set to list
+
+    # Handle dictionaries
+    elif isinstance(obj, dict):
+        return {key: safe_jsonable_encoder(value) for key, value in obj.items()}
+
+    # Handle bytes and bytearray
+    elif isinstance(obj, (bytes, bytearray)):
+        return obj.decode("utf-8", errors="ignore")  # Convert bytes to string
+
+    # Fallback to FastAPI's jsonable_encoder
+    else:
+        try:
+            return jsonable_encoder(obj)
+        except TypeError as e:
+            print(f"Failed to serialize object of type {type(obj)}: {e}")
+            return str(obj)  # If all else fails, convert to string
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 def clean_data(csv_url):
     data = pd.read_csv(csv_url)

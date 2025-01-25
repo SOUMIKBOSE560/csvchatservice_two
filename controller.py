@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
 from agent_service import fallback_chat
+from csv_service import safe_jsonable_encoder
 from initial_question_handler import if_initial_chart_question, if_initial_chat_question
 from smolagent_hf_gemini import csv_smolagent_hf_gemini as gemini_agent
 from smolagent_hf_default_qwen import csv_smolagent_hf_qwen as qwen_agent
@@ -106,14 +107,8 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
 
 
 
-
-
-
-
-
 @app.post("/api/csv-chat/")
 async def csv_chat(request: dict, authorization: str = Header(None)):
-
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
 
@@ -134,46 +129,39 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
         csv_url = request.get("csv_url")
         decoded_url = unquote(csv_url)
         
-            
-        # initial query handler
-        if(if_initial_chat_question(query)):
+        # Initial query handler
+        if if_initial_chat_question(query):
             try:
-             answer = gemini_agent(decoded_url,f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
-             try:
-              json_resp = jsonable_encoder(answer)
-              return {"answer": json_resp}
-             except Exception as e:
-              fallbackResp = await fallback_chat(query, csv_url)
-              return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
+                answer = gemini_agent(decoded_url, f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
+                try:
+                    json_resp = safe_jsonable_encoder(answer)  # Use safe_jsonable_encoder
+                    return {"answer": json_resp}
+                except Exception as e:
+                    fallbackResp = await fallback_chat(query, csv_url)
+                    return {"answer": safe_jsonable_encoder(fallbackResp.get("python_code"))}  # Use safe_jsonable_encoder
             except Exception as e:
-             fallbackResp = await fallback_chat(query, csv_url)
-             return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
+                fallbackResp = await fallback_chat(query, csv_url)
+                return {"answer": safe_jsonable_encoder(fallbackResp.get("python_code"))}  # Use safe_jsonable_encoder
          
         try:
-             answer = qwen_agent(decoded_url,query)
+            answer = qwen_agent(decoded_url, query)
         except Exception as e:
-             print(f"Error qwen agent: {e}")
-             try:
-                # print("Falling back to gemini agent")
-                answer = gemini_agent(decoded_url,query)
-             except Exception as e:
-              print(f"Error gemini agent: {e}")
-              fallbackResp = await fallback_chat(query, csv_url)
-              return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
+            print(f"Error qwen agent: {e}")
+            try:
+                answer = gemini_agent(decoded_url, query)
+            except Exception as e:
+                print(f"Error gemini agent: {e}")
+                fallbackResp = await fallback_chat(query, csv_url)
+                return {"answer": safe_jsonable_encoder(fallbackResp.get("python_code"))}  # Use safe_jsonable_encoder
                  
-        # print(f"Final answer: {answer}")
-        
         try:
-         json_answer = jsonable_encoder(answer)
-         return {"answer": json_answer}
+            json_answer = safe_jsonable_encoder(answer)  # Use safe_jsonable_encoder
+            return {"answer": json_answer}
         except Exception as e:
-         print(f"Error in jsonable_encoder: {e}")
-         fallbackResp = await fallback_chat(query, csv_url)
-         return {"answer": jsonable_encoder(fallbackResp.get("python_code"))}
+            print(f"Error in safe_jsonable_encoder: {e}")
+            fallbackResp = await fallback_chat(query, csv_url)
+            return {"answer": safe_jsonable_encoder(fallbackResp.get("python_code"))}  # Use safe_jsonable_encoder
                
     except Exception as e:
         print(f"Error: {e}")
         return {"answer": "error"}
-   
-   
-   
