@@ -1,3 +1,4 @@
+import json
 import os
 from urllib.parse import unquote
 from dotenv import load_dotenv
@@ -5,6 +6,8 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 from pydantic_ai import Agent
+
+from csv_service import get_csv_basic_info
 
 load_dotenv()
 
@@ -98,20 +101,26 @@ async def casual_query(query):
 ##### ----------------------------------------------------------------------------------------------------------------------------------------------- #####
 
 
-fallback_agent_system_prompt = """
-You are an AI assistant developed by Soumik Bose and his team and their company's name is "chatcsvandpdf.com" that generates Python code based on user requests. Follow these guidelines:
-1. Clarify: Ask questions if the request is unclear.
-2. Libraries: Use appropriate libraries like `csv`, `pandas`, or `numpy` for handling CSV data.
-3. Code Quality: Write clean, efficient, and modular code to process, analyze, or manipulate CSV data.
-4. Comments: Add brief comments to explain key parts, especially for data manipulation.
-5. Edge Cases: Handle edge cases like empty CSVs, missing headers, or malformed rows.
-6. Tests: Provide example usage or unit tests when necessary.
-7. Compatibility: Ensure the code works for the specified Python version and always *** use three backticks (```) before and after your code as Markdown ***.
-"""
+fallback_agent_system_prompt = '''
+You are the last resort AI assistant developed by Soumik Bose and his team at "chatcsvandpdf.com". All other systems have failed to address the user's query, and you must now provide a solution. Your task is to generate Python code or a response to handle the user's request for a CSV file gracefully. Follow these guidelines:
+
+1. **Graceful Handling**: Approach the situation calmly and provide a reliable solution. If information is insufficient, clarify before proceeding.
+2. **Fallback Expertise**: Advise the user to use appropriate libraries or methods (e.g., pandas for file handling, numpy, seaborn, matplotlib, or similar packages for calculations, analysis, or chart creation) to process, analyze, or manipulate the CSV data effectively.
+3. **Code and Explanation**: Write clean, modular Python code, and explain key steps with comments for clarity.
+4. **Summary of CSV**: If applicable, include a small summary of the CSV structure or content for context.
+5. **Edge Case Management**: Handle edge cases such as:
+   - Empty CSV files
+   - Missing headers or malformed rows
+   - Large datasets
+6. **User-Friendly Response**: Present the output in a clear and user-friendly manner, alongside the Python code.
+7. **Example Usage**: Include example input/output or a sample test case to ensure understanding.
+
+Remember, the user is relying on you as their final hope to solve their CSV-related query. Provide your best effort, and ensure the response is both actionable and informative.
+'''
 
 
 class FallbackChatResponse(BaseModel):
-    python_code: str
+    response: str
     
     
 fallback_agent = Agent(
@@ -124,17 +133,13 @@ fallback_agent = Agent(
 async def fallback_chat(query, csv_url):
     # Extract the CSV data
     decoded_url = unquote(csv_url)
-    df = pd.read_csv(decoded_url)
-
-    # Extract the first two rows and column names
-    cols = df.columns.tolist()
-    rows = df.head(2).to_json(orient="records")
+   
     
     # Prepare the string with column names and two rows
-    csv_structure_info = f"Column Names: {', '.join(cols)}. Example Rows: {rows}"
+    basic_csv_info = json.dumps(get_csv_basic_info(decoded_url))
     
     os.environ["GROQ_API_KEY"] = os.getenv("PYDANTICAI_GROQ_FALLBACK_CHAT_API_KEY")
     
     # Pass the information to the agent
-    result = await fallback_agent.run(f"{query}. File Structure: {csv_structure_info}")
-    return {"python_code": result.data.python_code}
+    result = await fallback_agent.run(f"{query}. basic csv info: {basic_csv_info}")
+    return {"fallback_response": result.data.response}

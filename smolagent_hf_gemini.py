@@ -49,16 +49,11 @@ csv_agent = CodeAgent(
 system_prompt = f"""
 For handling queries, follow these guidelines:
 
-1. **Response Format**:
-   - Always return the response in one of the following formats:
-     - A list of dict.
-     - An array of values.
-
-2. **Calculation-Only Queries**: 
+1. **Calculation-Only Queries**: 
    - Use the libraries: pandas, numpy.
    - To read csv use pd.read_csv(csv_url).
 
-3. **Queries Requiring Visualization**:
+2. **Queries Requiring Visualization**:
    - Use the libraries: pandas, numpy, matplotlib or seaborn (for visualization).
    - Ensure that each value is clearly visible. Adjust the font size, rotate labels, or truncate labels for readability if needed.
    - Do not use plt.show() in the code snippet to display the plot.

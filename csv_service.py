@@ -5,6 +5,41 @@ from typing import Any
 from datetime import datetime, date, time, timedelta
 
 
+def get_csv_basic_info(csv_path):
+    """
+    Get basic information about a CSV file including:
+    - Row count
+    - Column count
+    - Column names
+    - First two rows
+    
+    Parameters:
+    csv_path (str): Path to the CSV file
+    
+    Returns:
+    dict: Dictionary containing basic file information or error message
+    """
+    try:
+        # Read the CSV file
+        df = clean_data(csv_path)
+        
+        print(f"CSV file read successfully: {csv_path}")
+        
+        return {
+            'row_count': df.shape[0],
+            'col_count': df.shape[1],
+            'col_names': df.columns.tolist(),
+            'first_two_rows': df.head(2).to_dict('records'),
+            'error': None
+        }
+    except Exception as e:
+        return {
+            'error': f"Error reading CSV file: {str(e)}",
+        }
+        
+
+
+
 def safe_jsonable_encoder(obj: Any) -> Any:
     """
     Handles all NumPy/Pandas types, custom objects, and edge cases without errors.
