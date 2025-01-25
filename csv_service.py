@@ -8,6 +8,11 @@ from datetime import datetime, date, time, timedelta
 
 
 
+from fastapi.encoders import jsonable_encoder
+import numpy as np
+import pandas as pd
+from typing import Any
+from datetime import datetime, date, time, timedelta
 
 def safe_jsonable_encoder(obj: Any) -> Any:
     """
@@ -43,8 +48,6 @@ def safe_jsonable_encoder(obj: Any) -> Any:
         return obj.isoformat()  # Convert Timestamp to ISO format string
     elif isinstance(obj, (pd.Timedelta)):
         return str(obj)  # Convert Timedelta to string
-    elif pd.isna(obj):  # Handle pd.NA and np.nan
-        return None
 
     # Handle Python datetime types
     elif isinstance(obj, (datetime, date, time, timedelta)):
@@ -68,6 +71,10 @@ def safe_jsonable_encoder(obj: Any) -> Any:
     elif isinstance(obj, (bytes, bytearray)):
         return obj.decode("utf-8", errors="ignore")  # Convert bytes to string
 
+    # Handle pd.NA and np.nan
+    elif pd.isna(obj) or (isinstance(obj, (np.ndarray)) and np.isnan(obj).all()):
+        return None
+
     # Fallback to FastAPI's jsonable_encoder
     else:
         try:
@@ -75,9 +82,6 @@ def safe_jsonable_encoder(obj: Any) -> Any:
         except TypeError as e:
             print(f"Failed to serialize object of type {type(obj)}: {e}")
             return str(obj)  # If all else fails, convert to string
-        
-        
-        
         
         
         
