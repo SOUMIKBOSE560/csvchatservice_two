@@ -5,6 +5,30 @@ from typing import Any
 from datetime import datetime, date, time, timedelta
 
 
+# Generic JSON encoder to handle all numpy types
+def custom_jsonable_encoder(obj):
+    # Handle numpy scalar types
+    if isinstance(obj, (np.integer, np.int8, np.int16, np.int32, np.int64,
+                       np.uint8, np.uint16, np.uint32, np.uint64)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float16, np.float32, np.float64)):
+        return float(obj)
+    elif isinstance(obj, (np.bool_)):
+        return bool(obj)
+    elif isinstance(obj, (np.str_)):
+        return str(obj)
+    # Handle numpy arrays
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    # Handle numpy structured arrays and record arrays
+    elif isinstance(obj, (np.void, np.record)):
+        return {key: custom_jsonable_encoder(obj[key]) for key in obj.dtype.names}
+    # Handle other non-serializable objects
+    else:
+        # Fall back to the default jsonable_encoder for other types
+        return jsonable_encoder(obj)
+    
+    
 def get_csv_basic_info(csv_path):
     """
     Get basic information about a CSV file including:

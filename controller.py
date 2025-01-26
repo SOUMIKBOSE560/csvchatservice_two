@@ -1,4 +1,5 @@
 
+from typing import Dict
 from urllib.parse import unquote
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.encoders import jsonable_encoder
@@ -6,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
 from agent_service import fallback_chat
+from csv_service import custom_jsonable_encoder
 from initial_question_handler import if_initial_chart_question, if_initial_chat_question
 from smolagent_hf_gemini import csv_smolagent_hf_gemini as gemini_agent
 from smolagent_hf_default_qwen import csv_smolagent_hf_qwen as qwen_agent
@@ -105,9 +107,8 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
 
 
 
-
 @app.post("/api/csv-chat/")
-async def csv_chat(request: dict, authorization: str = Header(None)):
+async def csv_chat(request: Dict, authorization: str = Header(None)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
 
@@ -133,14 +134,14 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
             try:
                 answer = gemini_agent(decoded_url, f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
                 try:
-                    json_resp = jsonable_encoder(answer)  # Use jsonable_encoder
+                    json_resp = custom_jsonable_encoder(answer)  # Use custom_jsonable_encoder
                     return {"answer": json_resp}
                 except Exception as e:
                     fallbackResp = await fallback_chat(query, csv_url)
-                    return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use jsonable_encoder
+                    return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
             except Exception as e:
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use jsonable_encoder
+                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
          
         try:
             answer = qwen_agent(decoded_url, query)
@@ -151,15 +152,15 @@ async def csv_chat(request: dict, authorization: str = Header(None)):
             except Exception as e:
                 print(f"Error gemini agent: {e}")
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use jsonable_encoder
+                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
                  
         try:
-            json_answer = jsonable_encoder(answer)  # Use jsonable_encoder
+            json_answer = custom_jsonable_encoder(answer)  # Use custom_jsonable_encoder
             return {"answer": json_answer}
         except Exception as e:
-            print(f"Error in jsonable_encoder: {e}")
+            print(f"Error in custom_jsonable_encoder: {e}")
             fallbackResp = await fallback_chat(query, csv_url)
-            return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use jsonable_encoder
+            return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
                
     except Exception as e:
         print(f"Error: {e}")
