@@ -15,7 +15,7 @@ from smolagent_hf_default_qwen import csv_smolagent_hf_qwen as qwen_agent
 
 
 
-# uvicorn controller:app --host localhost --port 8086 --reload
+# uvicorn controller:app --host localhost --port 8085 --reload
 app = FastAPI()
 image_file_path = os.getenv("IMAGE_FILE_PATH")
 image_not_found = os.getenv("IMAGE_NOT_FOUND")
@@ -85,7 +85,8 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
              if "temp_chart" in answer:
                  return FileResponse(image_file_path, media_type="image/png")
              else:
-                return {"answer":"error"}
+                fallbackResp = await fallback_chat(query, csv_url)
+                return {"answer": fallbackResp, "responseType": "fallback"}
 
         # if not initial query, then continue with the rest of the code
 
@@ -99,7 +100,7 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
                 return FileResponse(image_file_path, media_type="image/png")
             else:
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}
+                return {"answer": fallbackResp, "responseType": "fallback"}
     
     except Exception as e:
        return {"answer":"error"}
@@ -138,10 +139,10 @@ async def csv_chat(request: Dict, authorization: str = Header(None)):
                     return {"answer": json_resp}
                 except Exception as e:
                     fallbackResp = await fallback_chat(query, csv_url)
-                    return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
+                    return {"answer": fallbackResp, "responseType": "fallback"}  # Use custom_jsonable_encoder
             except Exception as e:
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
+                return {"answer": fallbackResp, "responseType": "fallback"}  # Use custom_jsonable_encoder
          
         try:
             answer = qwen_agent(decoded_url, query)
@@ -152,7 +153,7 @@ async def csv_chat(request: Dict, authorization: str = Header(None)):
             except Exception as e:
                 print(f"Error gemini agent: {e}")
                 fallbackResp = await fallback_chat(query, csv_url)
-                return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
+                return {"answer": fallbackResp, "responseType": "fallback"}  # Use custom_jsonable_encoder
                  
         try:
             json_answer = custom_jsonable_encoder(answer)  # Use custom_jsonable_encoder
@@ -160,8 +161,41 @@ async def csv_chat(request: Dict, authorization: str = Header(None)):
         except Exception as e:
             print(f"Error in custom_jsonable_encoder: {e}")
             fallbackResp = await fallback_chat(query, csv_url)
-            return {"answer": jsonable_encoder(fallbackResp.get("fallback_response"))}  # Use custom_jsonable_encoder
+            return {"answer": fallbackResp, "responseType": "fallback"}  # Use custom_jsonable_encoder
                
     except Exception as e:
         print(f"Error: {e}")
         return {"answer": "error"}
+    
+    
+    
+    
+# @app.post("/api/csv-fallback-chat/")
+# async def csv_chat(request: Dict, authorization: str = Header(None)):
+#     if not authorization:
+#         raise HTTPException(status_code=401, detail="Authorization header missing")
+
+#     if not authorization.startswith("Bearer "):
+#         raise HTTPException(status_code=401, detail="Invalid authorization header format")
+
+#     token = authorization.split(" ")[1]
+#     if not token:
+#         raise HTTPException(status_code=401, detail="Token missing")
+
+#     if token != os.getenv("AUTH_TOKEN"):  
+#         raise HTTPException(status_code=403, detail="Invalid token")
+
+#     try:
+#         query = request.get("query")
+#         query = query.lower()
+        
+#         csv_url = request.get("csv_url")
+#         decoded_url = unquote(csv_url)
+        
+#         # Fallback to fallback_chat in case of any error
+#         fallbackResp = await fallback_chat(query, csv_url)
+#         return {"answer": fallbackResp, "responseType": "fallback"}
+               
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return {"answer": "error"}
