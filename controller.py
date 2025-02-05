@@ -133,7 +133,7 @@ async def csv_chat(request: Dict, authorization: str = Header(None)):
         # Initial query handler
         if if_initial_chat_question(query):
             try:
-                answer = gemini_agent(decoded_url, f"{query} && Please answer in a short and concise manner as list and list items (Markdown format)")
+                answer = gemini_agent(decoded_url, f"{query} && Please answer in a short and descriptive way.")
                 try:
                     json_resp = custom_jsonable_encoder(answer)  # Use custom_jsonable_encoder
                     return {"answer": json_resp}
