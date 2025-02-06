@@ -3,6 +3,7 @@ import time
 from dotenv import load_dotenv
 from matplotlib import pyplot as plt
 from smolagents import CodeAgent, DuckDuckGoSearchTool, HfApiModel
+from csv_service import CleanDataTool
 import matplotlib
 
 
@@ -35,7 +36,7 @@ plt.show = save_plot_instead_of_show
 def initialize_agent():
     """Reinitialize the agent to pick up the latest HF_TOKEN."""
     return CodeAgent(
-        tools=[DuckDuckGoSearchTool()],
+        tools=[DuckDuckGoSearchTool(),CleanDataTool()],
         model=HfApiModel(),
         additional_authorized_imports=["pandas", "numpy", "io", "os", "matplotlib", "seaborn"]
     )
@@ -48,7 +49,7 @@ For handling queries, follow these guidelines:
 
 1. **Calculation-Only Queries**: 
    - Use the libraries: pandas, numpy.
-   - To read csv use pd.read_csv(csv_url).
+   - To read csv use CleanDataTool.
 
 2. **Queries Requiring Visualization**:
    - Use the libraries: pandas, numpy, matplotlib or seaborn (for visualization).

@@ -74,8 +74,6 @@ async def csv_chart(request: dict, authorization: str = Header(None)):
 
     try:
         query = request.get("query")
-        query = query.lower()
-        
         csv_url = request.get("csv_url")
         decoded_url = unquote(csv_url)
         
@@ -124,9 +122,7 @@ async def csv_chat(request: Dict, authorization: str = Header(None)):
         raise HTTPException(status_code=403, detail="Invalid token")
 
     try:
-        query = request.get("query")
-        query = query.lower()
-        
+        query = request.get("query")    
         csv_url = request.get("csv_url")
         decoded_url = unquote(csv_url)
         
